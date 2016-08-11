@@ -28,11 +28,33 @@ wss.broadcast = function broadcast(message) {
 // looking for clients
 wss.on('connection', function connection(ws) {
 	ws.on('message', function incoming(message) {
-		console.log('received: ' + message);
+		var data = JSON.parse(message);
+		// type = {command, status, message}
+		if (data.type == "command") {
+			if (data.data.cmd == "verify") {
+				// check username. if okey, send history. if not - send error
+				var name = data.data.data;
+				console.log(name + " is trying to log in");
+				// success:
+				data.data.cmd = "verified";
+				data.data.data = "history here";
+				// fail:
+				/*data.data.cmd = "notverified";
+				data.data.data = "";*/	
+				// send response
+				ws.send(JSON.stringify(data));
+			}
+		} else if (data.type == "status") {
+			
+		} else if (data.type == "message") {
+			
+		}
+		
 	});
 
-	ws.send('welcome');
-	this.broadcast("another client connected");
+// state = {request, response}
+	//ws.send('welcome');
+	//this.broadcast("another client connected");
 });
 
 server.on('request', app);
