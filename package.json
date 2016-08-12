@@ -1,0 +1,19 @@
+{
+  "name": "doublegis-sample-chat",
+  "version": "1.0.0",
+  "description": "first",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Sergey Nikitin",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.14.0",
+    "ws": "^1.1.1"
+  },
+  "repository": {
+  	"type": "git",
+	"url": "https://github.com/noiluser/samplechatexam.git"
+  }  
+}
