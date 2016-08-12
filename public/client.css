@@ -1,0 +1,30 @@
+div {
+	margin-top : 30px;	
+}
+
+textarea {
+   resize: none;
+   vertical-align:top;
+}
+
+div#chat {
+	margin-top: 20px;
+}
+
+textarea#active-area {
+	outline: none;
+}
+
+#users-area {
+	margin-left: 10px;
+	outline: none;
+	vertical-align: top;
+	width : 100px;	
+}
+
+#send-message {
+	height: 30px;
+	margin-left: 10px;
+	vertical-align: top;
+	width : 100px;	
+}

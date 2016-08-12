@@ -7,18 +7,30 @@
     	<link rel="stylesheet"  href="static/client.css">
 	</head>
 	<body>
-		<h2>
-			Simple chat application
-		</h2>
-		<div class="initializers">
-			<input type="text" placeholder="Enter your name" id="name">
-			<input type="button" value="Connect" id="launch-connection">
-			<span id="status"></span>
-		</div>
-		<div>
-			<textarea rows="50" cols="100" id="active-area"></textarea>
-		</div>
+		<div class="chat" align="center">
+			<h2>
+				Simple chat application
+			</h2>
+			<div class="initializers">
+				<input type="text" placeholder="Enter your name" id="name">
+				<input type="button" value="Connect" id="launch-connection">
+				<span id="status">disconnected</span>
+			</div>
+			<div>
+				<div>
+					<textarea rows="17" cols="100" id="active-area" readonly="readonly"  placeholder="Press connect button to start"></textarea>
+					<select size="15" id="users-area">
+						<option> </option>
+					</select>
+				</div>
+				<div>
+					<textarea rows="3" cols="100" id="input-area" placeholder="Type message here..."></textarea>
+					<input type="button" value="send" id="send-message">
+				</div>
+			</div>
+		</div>		
 	</body>
 	
+	<script src="static/webclient.js"></script>
 	<script src="static/client.js"></script>
 </html>
