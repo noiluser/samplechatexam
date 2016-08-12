@@ -52,7 +52,7 @@ document.getElementById('launch-connection').onclick = function() {
 
 var client = new webclient({
 	"host" : window.location.host,
-	"secured" : 0,
+	"secured" : 1,
 	"historyEl" : "active-area",
 	"usersEl" : "users-area"
 });
