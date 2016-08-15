@@ -4,9 +4,9 @@ String.prototype.trim = function() {
 
 var client = new webclient({
 	"host" : window.location.host,
-	"secured" : 1,
+	"secured" : 0,
 	"withDate" : 0,
-	"keepAlive" : 1,
+	"keepAlive" : 0,
 	"onConnect" : function() {		
 		document.getElementById("initializer").style.display = "none";
 		document.getElementById("room").style.display = "block";

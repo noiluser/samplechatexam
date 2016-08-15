@@ -39,51 +39,53 @@ wss.on('connection', function connection(ws) {
 		var type = data.type;
 		var username = data.user;
 		var content = data.data;
-		// type = {cmd, status, msg}
+		// type = {cmd, msg}
 		if (type == "cmd") {
-			if (content.cmd == "verify") { // TODO verify  user = "system"!!!!
-				console.log(username + " is trying to log in");
-				if (users.indexOf(username) > -1) {
-					// user already connected
-					data.data.data = 0; 
+			if (content.cmd == "verify") {
+				if (username) {
+					console.log(username + " is trying to log in");
+					if (users.indexOf(username) > -1) {
+						// user already connected
+						data.data.data = 0; 
+					} else {
+						// connect approved
+						users.push(username);
+						data.data.data = 1;
+						// add line in history
+						var time = new Date();
+						var broadmsg = {
+								"type" : "msg",
+								"user" : "",
+								"data" : {
+									"time" : time.getTime(),
+									"data" : username + " connected"
+								}
+						}
+						history.push(broadmsg);
+						// broadcast user connected
+						self.broadcast(JSON.stringify(broadmsg));
+						// broadcast new userlist					
+						var broadulist = {
+								"user" : "",
+								"type" : "cmd",
+								"data" : {
+									"cmd" : "userlist",
+									"data" : users
+								}
+						}
+						self.broadcast(JSON.stringify(broadulist));					
+					}
+					// send to client verification results: username is correct or not
+					ws.send(JSON.stringify(data));
 				} else {
-					// connect approved
-					users.push(username);
-					data.data.data = 1;
-					// add line in history
-					var time = new Date();
-					var broadmsg = {
-							"type" : "msg",
-							"user" : "",
-							"data" : {
-								"time" : time.getTime(),
-								"data" : username + " connected"
-							}
-					}
-					history.push(broadmsg);
-					// broadcast user connected
-					self.broadcast(JSON.stringify(broadmsg));
-					// broadcast new userlist					
-					var broadulist = {
-							"user" : "",
-							"type" : "cmd",
-							"data" : {
-								"cmd" : "userlist",
-								"data" : users
-							}
-					}
-					self.broadcast(JSON.stringify(broadulist));					
+					ws.close();
 				}
-				// send to client verification results: username is correct or not
-				ws.send(JSON.stringify(data));
-				
-
 			} else if (content.cmd == "history") {
 				data.data.data = history;
 				ws.send(JSON.stringify(data));
 			} else if (content.cmd == "disconnect") {
-				console.log(username + " disconnected");
-				// connect approved
+				console.log(username + " goes offline");
+				// disconnect approved
 				var index = users.indexOf(username);
 				if (index > -1) {
 					users.splice(index, 1);
@@ -101,7 +103,7 @@ wss.on('connection', function connection(ws) {
 						}
 				}
 				history.push(broadmsg);
-				// broadcast user connected
+				// broadcast user disconnected
 				self.broadcast(JSON.stringify(broadmsg));
 				// broadcast new userlist					
 				var broadulist = {
@@ -114,20 +116,17 @@ wss.on('connection', function connection(ws) {
 				}
 				self.broadcast(JSON.stringify(broadulist));	
 			} else if (content.cmd == "ping") {
+				// keep connection alive
 				data.data.data = "pong";
 				ws.send(JSON.stringify(data));
 			}
 		} else if (data.type == "msg") {
 			var time = new Date();
 			data.data.time = time.getTime();
+			// save message and broadcast it for everybody
 			history.push(data);
 			self.broadcast(JSON.stringify(data));
-		} else if (data.type == "status") {
-			
-		} else {
-			
-		}
-		
+		} 		
 	});
 });
 
