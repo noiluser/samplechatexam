@@ -69,6 +69,9 @@ var client = new webclient({
 	},
 	"onStatusUpdate": function(message) {
 		document.getElementById('status').innerHTML = message;
+	},
+	"onMessageSent": function() {
+		document.getElementById('input-area').value = "";
 	}
 });
 
@@ -98,4 +101,10 @@ document.getElementById('launch-connection').onclick = function() {
 
 window.onbeforeunload = function(e) {
 	client.disconnect();
+};
+
+document.getElementById('users-area').ondblclick = function() {
+	var address = this.value + ", ";
+	if (!document.getElementById('input-area').value)
+		document.getElementById('input-area').value = address;
 };

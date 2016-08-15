@@ -37,7 +37,9 @@ function webclient(settings) {
 	if (settings.hasOwnProperty("onConnect"))
 		this.cb.onConnect = settings.onConnect;	
 	if (settings.hasOwnProperty("onStatusUpdate"))
-		this.cb.onStatusUpdate = settings.onStatusUpdate;		
+		this.cb.onStatusUpdate = settings.onStatusUpdate;	
+	if (settings.hasOwnProperty("onMessageSent"))
+		this.cb.onMessageSent = settings.onMessageSent;	
 	
 	this.startupCmd = ["verify", "history"];
 	
@@ -213,6 +215,8 @@ webclient.prototype.sendMessage = function(msg) {
 				}
 		}
 		self.connection.send(JSON.stringify(data));
+		if(this.cb.hasOwnProperty('onMessageSent'))
+			this.cb.onMessageSent();
 	}
 }
 
