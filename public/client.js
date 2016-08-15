@@ -4,9 +4,9 @@ String.prototype.trim = function() {
 
 var client = new webclient({
 	"host" : window.location.host,
-	"secured" : 0,
+	"secured" : 1,
 	"withDate" : 0,
-	"keepAlive" : 0,
+	"keepAlive" : 1,
 	"onConnect" : function() {		
 		document.getElementById("initializer").style.display = "none";
 		document.getElementById("room").style.display = "block";
@@ -98,6 +98,11 @@ document.getElementById('users-area').ondblclick = function() {
 			document.getElementById('input-area').value = address + ", ";
 		document.getElementById('input-area').focus();
 	}
+};
+
+document.getElementById('name').onkeypress = function(e) {
+	if (event.which == 13 || event.keyCode == 13 || event.which == 10 || event.keyCode == 10) 
+		document.getElementById('launch-connection').click();
 };
 
 document.getElementById('name').focus();
