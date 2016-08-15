@@ -40,6 +40,8 @@ function webclient(settings) {
 		this.cb.onStatusUpdate = settings.onStatusUpdate;	
 	if (settings.hasOwnProperty("onMessageSent"))
 		this.cb.onMessageSent = settings.onMessageSent;	
+	if (settings.hasOwnProperty("onMessageReceived"))
+		this.cb.onMessageReceived = settings.onMessageReceived;	
 	
 	this.startupCmd = ["verify", "history"];
 	
@@ -181,6 +183,8 @@ webclient.prototype.onMessages = function(lines, append) {
 			  console.log("history", message);
 		  }
 	});	
+	if(this.cb.hasOwnProperty('onMessageReceived'))
+		this.cb.onMessageReceived();
 }
 
 webclient.prototype.onUserList = function(users) {

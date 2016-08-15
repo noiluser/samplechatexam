@@ -34,6 +34,7 @@ var historyLimit = 99;
 wss.on('connection', function connection(ws) {
 	var self = this;
 	ws.on('message', function incoming(message) {
+		console.log(message);
 		var data = JSON.parse(message);
 		var type = data.type;
 		var username = data.user;

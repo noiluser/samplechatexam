@@ -72,6 +72,10 @@ var client = new webclient({
 	},
 	"onMessageSent": function() {
 		document.getElementById('input-area').value = "";
+	},
+	"onMessageReceived": function() {
+		var textarea = document.getElementById('input-area');
+		textarea.scrollTop = textarea.scrollHeight;
 	}
 });
 
