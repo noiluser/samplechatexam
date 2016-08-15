@@ -37,3 +37,6 @@ textarea#active-area {
 	width : 100px;	
 }
 
+option.owner {
+	font-weight: bold;
+}

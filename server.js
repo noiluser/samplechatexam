@@ -28,7 +28,7 @@ wss.broadcast = function broadcast(message) {
 
 var users = [];
 var history = [];
-var historyLimit = 99;
+var historyLimit = 9999;
 
 // looking for clients
 wss.on('connection', function connection(ws) {

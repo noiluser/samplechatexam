@@ -80,6 +80,7 @@ webclient.prototype.connect = function() {
 		self.connection = connection;
 		connection.onerror = function(err) {
 			alert(self.msg.connectionError);
+			self.disconnect();
 		};
 		connection.onclose = function() {
 			self.status = "ready";

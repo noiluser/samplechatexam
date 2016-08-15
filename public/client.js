@@ -7,12 +7,16 @@ var client = new webclient({
 	"secured" : 1,
 	"withDate" : 0,
 	"keepAlive" : 1,
-	"onConnect" : function() {
+	"onConnect" : function() {		
 		document.getElementById("initializer").style.display = "none";
 		document.getElementById("room").style.display = "block";
 		document.getElementById('input-area').focus();
 	},
 	"onDisconnect" : function() {
+		document.getElementById("name").disabled = false;
+		document.getElementById("launch-connection").disabled = false;
+		document.getElementById('name').focus();
+		
 		document.getElementById("room").style.display = "none";
 		document.getElementById("initializer").style.display = "block";
 	},
@@ -36,6 +40,7 @@ var client = new webclient({
 	},
 	"onUserlist": function(users) {
 		var self = this;
+		var name = document.getElementById('name').value;
 		elem = document.getElementById("users-area");
 		while (elem.options.length > 0) {                
 			elem.remove(0);
@@ -45,6 +50,8 @@ var client = new webclient({
 				  var el = document.createElement("option");
 				  el.textContent = item;
 				  el.value = item;
+				  if (item == name) 
+					  el.className = "owner";
 				  elem.appendChild(el);
 			});	
 		}
@@ -67,10 +74,14 @@ document.getElementById('send-message').onclick = function() {
 
 document.getElementById('launch-connection').onclick = function() {
 	var name = document.getElementById('name').value;
-	if (name) {
+	document.getElementById("name").disabled = "disabled";
+	document.getElementById("launch-connection").disabled = "disabled";	
+	if (name) {		
 		client.setName(name);
 		client.connect();
 	} else {
+		document.getElementById("name").disabled = false;
+		document.getElementById("launch-connection").disabled = false;
 		alert("Username cannot be empty.");
 		document.getElementById('name').focus();
 	}
@@ -81,10 +92,12 @@ window.onbeforeunload = function(e) {
 };
 
 document.getElementById('users-area').ondblclick = function() {
-	var address = this.value + ", ";
-	if (!document.getElementById('input-area').value) 
-		document.getElementById('input-area').value = address;
-	document.getElementById('input-area').focus();
+	var address = this.value;
+	if (address) {
+		if (!document.getElementById('input-area').value) 
+			document.getElementById('input-area').value = address + ", ";
+		document.getElementById('input-area').focus();
+	}
 };
 
 document.getElementById('name').focus();
