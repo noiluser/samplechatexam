@@ -30,9 +30,8 @@ function webclient(settings) {
 		this.host = "";
 	
 	if (settings.hasOwnProperty("name"))
-		this.name = settings.name;
-	else 
-		this.name = "";
+		this.setName(settings.name);
+
 	
 	if (settings.hasOwnProperty("historyEl"))
 		this.elem.history = settings.historyEl;
@@ -43,8 +42,6 @@ function webclient(settings) {
 		this.cb.onConnect = settings.onConnect;
 	if (settings.hasOwnProperty("onDisconnect"))
 		this.cb.onDisconnect = settings.onDisconnect;
-	if (settings.hasOwnProperty("onHistory"))
-		this.cb.onHistory = settings.onHistory;	
 	if (settings.hasOwnProperty("onMessageReceived"))
 		this.cb.onMessageReceived = settings.onMessageReceived;	
 	if (settings.hasOwnProperty("onMessageSent"))
@@ -60,7 +57,10 @@ function webclient(settings) {
 	this.msg.connectEnd = ["Username verified", "History loaded", "Online"];
 	this.msg.connectFail = ["Username is used by someone else", "Can't load history"];
 	this.msg.connectEstablish = "Establishing connection";
-	this.msg.emptyName = "username cannot be empty";
+	this.msg.connectionError = "The problem occured while websocket tries to set connection. Please try again.";
+	this.msg.emptyName = "Username cannot be empty. Please set username first";
+	this.msg.nameExists = "The username you specified is already exists.";
+	this.msg.serverUnavailable = "Server not responding. Connection problem.";
 	
 	this.startState = 0;
 	this.connected = 0;
@@ -68,26 +68,29 @@ function webclient(settings) {
 
 webclient.prototype.connect = function() {
 	var self = this;
-	self.status = "fetching";
-	self.updateStatus(self.msg.connectEstablish);
 	
-	if (self.secured)
-		connection = new WebSocket("wss://" + window.location.host);
-	else 
-		connection = new WebSocket("ws://" + window.location.host);
-	self.connection = connection;
-	connection.onerror = function(err) {
-		// TODO
-		console.log(err);
-	};
-	connection.onopen = function() { 
-		self.afterConnect();
-		if(self.cb.hasOwnProperty('onConnect'))
-			self.cb.onConnect();
+	if (self.name) { 
+		self.status = "fetching";
+		self.updateStatus(self.msg.connectEstablish);
 		
-	};
-	connection.onmessage  = function(msg) { self.receivedMsg(msg.data); };
-	
+		if (self.secured)
+			connection = new WebSocket("wss://" + window.location.host);
+		else 
+			connection = new WebSocket("ws://" + window.location.host);
+		self.connection = connection;
+		connection.onerror = function(err) {
+			alert(self.msg.connectionError);
+		};
+		connection.onclose = function() {
+			self.status = "ready";
+			self.updateStatus("Disconnected");
+		};
+		connection.onopen = function() { self.afterConnect(); };
+		connection.onmessage  = function(msg) { self.receivedMsg(msg.data); };	
+	} else {
+		this.status = "error";
+		this.updateStatus(this.msg.emptyName);
+	}
 }
 
 webclient.prototype.afterConnect = function() {
@@ -102,48 +105,40 @@ webclient.prototype.afterConnect = function() {
 			}
 		}
 		self.connection.send(JSON.stringify(request));
-	}
-	if (self.startState == 2) {
-		self.status = "online";
+	} else {
+		if(self.cb.hasOwnProperty('onConnect'))
+			self.cb.onConnect();
 	}
 }
 
 webclient.prototype.updateStatus = function(status) {
 	this.status = status;
 	if(this.cb.hasOwnProperty('onStatusUpdate'))
-		this.cb.onStatusUpdate(status);
-	else 
-		console.log(this.status);	
+		this.cb.onStatusUpdate(status);	
 }
 
 webclient.prototype.setName = function(name) {
 	if (name)
 		this.name = name;
-	else {
-		this.status = "error";
-		this.updateStatus(this.msg.emptyName);
-	}
 }
 
 webclient.prototype.receivedMsg = function(msg) {
 	var self = this;
-	var failed = 1;
+	var failed = 0;
 	var data = JSON.parse(msg);
 	if (data.type == "cmd") {
-		if ((data.data.cmd == self.startupCmd[self.startState]) && (self.startState < 2)) {
+		if ((data.data.cmd == self.startupCmd[self.startState]) && (self.startState < 3)) {
 			if (self.startState == 0) {
 				if (data.data.data == 1) {
 					failed = 0;
 				} else {
-					// TODO username fail
+					alert(self.msg.nameExists);
 					failed = 1;
 				}
 			} else if (self.startState == 1) {
 				self.onMessages(data.data.data, 0);
 				failed = 0;
-			} else {
-				
-			}
+			} 
 			
 			if (failed == 0) {
 				self.updateStatus(self.msg.connectEnd[self.startState]);
@@ -151,13 +146,11 @@ webclient.prototype.receivedMsg = function(msg) {
 				self.afterConnect();
 			} else {
 				self.updateStatus(self.msg.connectFail[self.startState]);
-				self.disconnect();
+				self.disconnect(1);
 			}
 		} else if (data.data.cmd == "userlist") {
 			self.onUserList(data.data.data);
-		} else if (data.data.cmd == "pong") {
-			// TODO
-			
+		} else if ((data.data.cmd == "ping")&&(data.data.data == "pong")) {
 			if (self.keepAlive) {
 				if (self.pongId)
 					clearTimeout(self.pongId);
@@ -171,7 +164,7 @@ webclient.prototype.receivedMsg = function(msg) {
 						}
 						self.connection.send(JSON.stringify(pingRequest));
 						var pong = setTimeout(function() { 
-							alert("Server not responding. Connection problem.")
+							alert(self.msg.serverUnavailable)
 							self.disconnect();
 						}, 10000);				
 						self.pongId = pong;
@@ -184,7 +177,6 @@ webclient.prototype.receivedMsg = function(msg) {
 	} 
 }
 
-// OK
 webclient.prototype.dateToString = function(date) {
 	var dateObj = new Date(date);
 	var dateStr = [ ( dateObj.getMonth()+1 ).padLeft(), dateObj.getDate().padLeft(), dateObj.getFullYear() ].join('.') + ' ' +
@@ -192,15 +184,9 @@ webclient.prototype.dateToString = function(date) {
 	return dateStr;
 }
 
-// OK
 webclient.prototype.onMessages = function(lines, append) {
 	var self = this;
-	var elem;
-	if (self.elem.history) {
-		elem = document.getElementById(self.elem.history);
-		if (!append)
-			elem.value = "";
-	} 
+	var messages = [];
 	lines.forEach(function(item, i, arr) {
 		  var user = item.user;
 		  var msg = item.data.data;
@@ -213,35 +199,15 @@ webclient.prototype.onMessages = function(lines, append) {
 			  message = prefix + user + ": " + msg;
 		  else
 			  message = prefix + ">> " + msg;
-		  if (elem) {
-			 elem.value += message + "\r\n";
-		  } else {
-			  console.log("history", message);
-		  }
-	});	
+		  messages.push(message);
+	});		
 	if(this.cb.hasOwnProperty('onMessageReceived'))
-		this.cb.onMessageReceived();
+		this.cb.onMessageReceived(messages, append);
 }
 
 webclient.prototype.onUserList = function(users) {
-	var self = this;
-	var elem;
-	if (self.elem.users) {
-		elem = document.getElementById(self.elem.users);
-		while (elem.options.length > 0) {                
-			elem.remove(0);
-	    } 
-	} 
-	users.forEach(function(item, i, arr) {		  
-		  if (elem) {
-			  var el = document.createElement("option");
-			  el.textContent = item;
-			  el.value = item;
-			  elem.appendChild(el);
-		  } else {
-			  console.log("user-list", item);
-		  }
-	});	
+	if (this.cb.onUserlist)
+		this.cb.onUserlist(users);
 }
 
 webclient.prototype.sendMessage = function(msg) {
@@ -260,17 +226,21 @@ webclient.prototype.sendMessage = function(msg) {
 	}
 }
 
-webclient.prototype.disconnect = function() {
+webclient.prototype.disconnect = function(saveName) {
 	var self = this;
-	var request = {
-		"type" : "cmd",
-		"user" : self.name,
-		"data" : {
-			"cmd" : "disconnect"
+	if (!saveName) {
+		var request = {
+			"type" : "cmd",
+			"user" : self.name,
+			"data" : {
+				"cmd" : "disconnect"
+			}
 		}
+		self.connection.send(JSON.stringify(request));
 	}
-	self.connection.send(JSON.stringify(request));
+	self.startState = 0;
 	self.connection.close();
+	self.updateStatus("Disconnected");
 	if(this.cb.hasOwnProperty('onDisconnect'))
 		this.cb.onDisconnect();
 }

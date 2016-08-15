@@ -55,11 +55,9 @@ String.prototype.trim = function() {
 
 var client = new webclient({
 	"host" : window.location.host,
-	"secured" : 0,
+	"secured" : 1,
 	"withDate" : 0,
 	"keepAlive" : 1,
-	"historyEl" : "active-area",
-	"usersEl" : "users-area",
 	"onConnect" : function() {
 		document.getElementById("initializer").style.display = "none";
 		document.getElementById("room").style.display = "block";
@@ -76,9 +74,31 @@ var client = new webclient({
 		document.getElementById('input-area').value = "";
 		document.getElementById('input-area').focus();
 	},
-	"onMessageReceived": function() {
+	"onMessageReceived": function(messages, append) {
 		var textarea = document.getElementById('active-area');
+		
+		if (!append)
+			textarea.value = "";
+		messages.forEach(function(item, i, arr) {
+			textarea.value += item + "\r\n";
+		});
+		
 		textarea.scrollTop = textarea.scrollHeight;
+	},
+	"onUserlist": function(users) {
+		var self = this;
+		elem = document.getElementById("users-area");
+		while (elem.options.length > 0) {                
+			elem.remove(0);
+	    } 
+		if (elem) {
+			users.forEach(function(item, i, arr) {		  
+				  var el = document.createElement("option");
+				  el.textContent = item;
+				  el.value = item;
+				  elem.appendChild(el);
+			});	
+		}
 	}
 });
 
