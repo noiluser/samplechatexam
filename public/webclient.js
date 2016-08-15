@@ -38,25 +38,22 @@ function webclient(settings) {
 		this.elem.history = settings.historyEl;
 	if (settings.hasOwnProperty("usersEl"))
 		this.elem.users = settings.usersEl;
-	if (settings.hasOwnProperty("statusEl"))
-		this.elem.indicator = settings.statusEl;
 
-	
+	if (settings.hasOwnProperty("onConnect"))
+		this.cb.onConnect = settings.onConnect;
 	if (settings.hasOwnProperty("onDisconnect"))
 		this.cb.onDisconnect = settings.onDisconnect;
-	
-	if (settings.hasOwnProperty("onConnect"))
-		this.cb.onConnect = settings.onConnect;	
-	
-	if (settings.hasOwnProperty("onStatusUpdate"))
-		this.cb.onStatusUpdate = settings.onStatusUpdate;
-	
-	if (settings.hasOwnProperty("onMessageSent"))
-		this.cb.onMessageSent = settings.onMessageSent;	
-	
+	if (settings.hasOwnProperty("onHistory"))
+		this.cb.onHistory = settings.onHistory;	
 	if (settings.hasOwnProperty("onMessageReceived"))
 		this.cb.onMessageReceived = settings.onMessageReceived;	
-	
+	if (settings.hasOwnProperty("onMessageSent"))
+		this.cb.onMessageSent = settings.onMessageSent;	
+	if (settings.hasOwnProperty("onStatusUpdate"))
+		this.cb.onStatusUpdate = settings.onStatusUpdate;
+	if (settings.hasOwnProperty("onUserlist"))
+		this.cb.onUserlist = settings.onUserlist;
+
 	this.startupCmd = ["verify", "history", "ping"];
 	
 	this.msg.connectStart = ["Verifying username", "Fetching history", "Online"];
@@ -67,8 +64,6 @@ function webclient(settings) {
 	
 	this.startState = 0;
 	this.connected = 0;
-	
-	
 }
 
 webclient.prototype.connect = function() {
@@ -176,7 +171,8 @@ webclient.prototype.receivedMsg = function(msg) {
 						}
 						self.connection.send(JSON.stringify(pingRequest));
 						var pong = setTimeout(function() { 
-							console.log("error while pinging");
+							alert("Server not responding. Connection problem.")
+							self.disconnect();
 						}, 10000);				
 						self.pongId = pong;
 					}, 2000);

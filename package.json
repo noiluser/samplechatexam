@@ -1,5 +1,5 @@
 {
-  "name": "doublegis-sample-chat",
+  "name": "websocket-sample-chat",
   "version": "1.0.0",
   "description": "first",
   "main": "server.js",
