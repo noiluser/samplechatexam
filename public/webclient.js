@@ -106,8 +106,10 @@ webclient.prototype.afterConnect = function() {
 		}
 		self.connection.send(JSON.stringify(request));
 	} else {
-		if(self.cb.hasOwnProperty('onConnect'))
+		if(self.cb.hasOwnProperty('onConnect')) {
 			self.cb.onConnect();
+			self.ping();
+		}
 	}
 }
 
@@ -125,18 +127,18 @@ webclient.prototype.setName = function(name) {
 webclient.prototype.receivedMsg = function(msg) {
 	var self = this;
 	var failed = 0;
-	var data = JSON.parse(msg);
-	if (data.type == "cmd") {
-		if ((data.data.cmd == self.startupCmd[self.startState]) && (self.startState < 3)) {
+	var response = JSON.parse(msg);
+	if (response.type == "cmd") {
+		if ((response.data.cmd == self.startupCmd[self.startState]) && (self.startState < 3)) {
 			if (self.startState == 0) {
-				if (data.data.data == 1) {
+				if (response.data.data == 1) {
 					failed = 0;
 				} else {
 					alert(self.msg.nameExists);
 					failed = 1;
 				}
 			} else if (self.startState == 1) {
-				self.onMessages(data.data.data, 0);
+				self.onMessages(response.data.data, 0);
 				failed = 0;
 			} 
 			
@@ -148,32 +150,13 @@ webclient.prototype.receivedMsg = function(msg) {
 				self.updateStatus(self.msg.connectFail[self.startState]);
 				self.disconnect(1);
 			}
-		} else if (data.data.cmd == "userlist") {
-			self.onUserList(data.data.data);
-		} else if ((data.data.cmd == "ping")&&(data.data.data == "pong")) {
-			if (self.keepAlive) {
-				if (self.pongId)
-					clearTimeout(self.pongId);
-				var ping = setTimeout(function() { 
-						var pingRequest = {
-								"type" : "cmd",
-								"user" : self.name,
-								"data" : {
-									"cmd" : "ping"
-								}
-						}
-						self.connection.send(JSON.stringify(pingRequest));
-						var pong = setTimeout(function() { 
-							alert(self.msg.serverUnavailable)
-							self.disconnect();
-						}, 10000);				
-						self.pongId = pong;
-					}, 2000);
-				self.pingId = ping;				
-			}
+		} else if (response.data.cmd == "userlist") {
+			self.onUserList(response.data.data);
+		} else if ((response.data.cmd == "ping")&&(response.data.data == "pong")) {
+			self.ping();
 		}
-	} else if (data.type == "msg" && (self.startState >= 2)) {
-		self.onMessages([data], 1);
+	} else if (response.type == "msg" && (self.startState >= 2)) {
+		self.onMessages([response], 1);
 	} 
 }
 
@@ -243,4 +226,28 @@ webclient.prototype.disconnect = function(saveName) {
 	self.updateStatus("Disconnected");
 	if(this.cb.hasOwnProperty('onDisconnect'))
 		this.cb.onDisconnect();
+}
+
+webclient.prototype.ping = function() {
+	var self = this;
+	if (self.keepAlive) {
+		if (self.pongId)
+			clearTimeout(self.pongId);
+		var ping = setTimeout(function() { 
+				var pingRequest = {
+						"type" : "cmd",
+						"user" : self.name,
+						"data" : {
+							"cmd" : "ping"
+						}
+				}
+				self.connection.send(JSON.stringify(pingRequest));
+				var pong = setTimeout(function() { 
+					alert(self.msg.serverUnavailable)
+					self.disconnect();
+				}, 10000);				
+				self.pongId = pong;
+			}, 2000);
+		self.pingId = ping;	
+	}
 }

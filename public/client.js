@@ -1,54 +1,3 @@
-/*var connection;
-
-var printLog = function(message) {
-	document.getElementById('status').innerHTML = message;
-}
-
-var printMessage = function(message, append) {
-	//var el = document.getElementById('active-area').value;
-	console.log(message);
-}
-
-document.getElementById('launch-connection').onclick = function() {
-	var name = document.getElementById('name').value;
-	if (name) {
-		printLog("connecting...");
-		connection = new WebSocket("ws://" + window.location.host);
-		connection.onmessage = function(response) {
-			var data = JSON.parse(response.data);
-			if (data.type == "cmd") {
-				if (data.data.cmd == "verify") {
-					if (data.data.data == 1)
-						printLog("connected");
-					else {
-						connection.close();
-						printLog("disconnected");
-						alert("the username is already in use");
-					}
-				}
-			}
-			//console.log(data);
-		};
-		
-		connection.onopen = function() {
-			var msg = {
-				"type" : "cmd",
-				"user" : name,
-				"data" : {"cmd" : "verify"}
-			};
-			connection.send(JSON.stringify(msg));
-		};
-
-	} else {
-		alert("name is empty");
-	}
-};
-
-*/
-// connection.onclose = function() { alert("Connection closed...") };
-// connection.onmessage = function(evt) { $("#msg").append("<p>"+evt.data+"</p>"); };
-// connection.close(); - close connection
-// connection.send('Hey server, whats up?'); - send message
 String.prototype.trim = function() {
   return this.replace(/^\s+|\s+$/g, "");
 };
@@ -122,7 +71,8 @@ document.getElementById('launch-connection').onclick = function() {
 		client.setName(name);
 		client.connect();
 	} else {
-		alert("name is empty");
+		alert("Username cannot be empty.");
+		document.getElementById('name').focus();
 	}
 };
 
@@ -136,3 +86,5 @@ document.getElementById('users-area').ondblclick = function() {
 		document.getElementById('input-area').value = address;
 	document.getElementById('input-area').focus();
 };
+
+document.getElementById('name').focus();
