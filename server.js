@@ -53,7 +53,7 @@ wss.on('connection', function connection(ws) {
 					var time = new Date();
 					var broadmsg = {
 							"type" : "msg",
-							"user" : "system",
+							"user" : "",
 							"data" : {
 								"time" : time.getTime(),
 								"data" : username + " connected"
@@ -64,7 +64,7 @@ wss.on('connection', function connection(ws) {
 					self.broadcast(JSON.stringify(broadmsg));
 					// broadcast new userlist					
 					var broadulist = {
-							"user" : "system",
+							"user" : "",
 							"type" : "cmd",
 							"data" : {
 								"cmd" : "userlist",
@@ -80,20 +80,51 @@ wss.on('connection', function connection(ws) {
 			} else if (content.cmd == "history") {
 				data.data.data = history;
 				ws.send(JSON.stringify(data));
+			} else if (content.cmd == "disconnect") {
+				console.log(username + " disconnected");
+				// connect approved
+				var index = users.indexOf(username);
+				if (index > -1) {
+					users.splice(index, 1);
+				} else {
+					console.log("user not found");
+				}
+				// add line in history
+				var time = new Date();
+				var broadmsg = {
+						"type" : "msg",
+						"user" : "",
+						"data" : {
+							"time" : time.getTime(),
+							"data" : username + " disconnected"
+						}
+				}
+				history.push(broadmsg);
+				// broadcast user connected
+				self.broadcast(JSON.stringify(broadmsg));
+				// broadcast new userlist					
+				var broadulist = {
+						"user" : "",
+						"type" : "cmd",
+						"data" : {
+							"cmd" : "userlist",
+							"data" : users
+						}
+				}
+				self.broadcast(JSON.stringify(broadulist));	
 			}
-		} else if (data.type == "status") {
-			
 		} else if (data.type == "msg") {
+			var time = new Date();
+			data.data.time = time.getTime();
+			history.push(data);
+			self.broadcast(JSON.stringify(data));
+		} else if (data.type == "status") {
 			
 		} else {
 			
 		}
 		
 	});
-
-	// state = {request, response}
-	//ws.send('welcome');
-	//this.broadcast("another client connected");
 });
 
 server.on('request', app);

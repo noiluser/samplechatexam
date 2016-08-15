@@ -11,6 +11,14 @@ div#chat {
 	margin-top: 20px;
 }
 
+div#status {
+	text-align: left;
+}
+
+div#room {
+	display: none;	
+}
+
 textarea#active-area {
 	outline: none;
 }
@@ -28,3 +36,4 @@ textarea#active-area {
 	vertical-align: top;
 	width : 100px;	
 }
+

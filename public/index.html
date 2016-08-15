@@ -11,12 +11,11 @@
 			<h2>
 				Simple chat application
 			</h2>
-			<div class="initializers">
+			<div id="initializer">
 				<input type="text" placeholder="Enter your name" id="name">
 				<input type="button" value="Connect" id="launch-connection">
-				<span id="status">disconnected</span>
 			</div>
-			<div>
+			<div id="room">
 				<div>
 					<textarea rows="17" cols="100" id="active-area" readonly="readonly"  placeholder="Press connect button to start"></textarea>
 					<select size="15" id="users-area">
@@ -27,6 +26,11 @@
 					<textarea rows="3" cols="100" id="input-area" placeholder="Type message here..."></textarea>
 					<input type="button" value="send" id="send-message">
 				</div>
+			</div>
+			<div id="status">
+				<span>
+					ready
+				</span>
 			</div>
 		</div>		
 	</body>

@@ -13,7 +13,11 @@ function webclient(settings) {
 		this.secured = settings.secured;
 	else 
 		this.secured = 0;
-	
+	if (settings.hasOwnProperty("withDate"))
+		this.withDate = settings.withDate;
+	else 
+		this.withDate = 0;
+
 	if (settings.hasOwnProperty("host"))
 		this.host = settings.host;
 	if (settings.hasOwnProperty("name"))
@@ -25,9 +29,15 @@ function webclient(settings) {
 		this.elem.users = settings.usersEl;
 	if (settings.hasOwnProperty("statusEl"))
 		this.elem.indicator = settings.statusEl;
+	/*if (settings.hasOwnProperty("inputEl"))
+		this.elem.indicator = settings.statusEl;*/
 	
 	if (settings.hasOwnProperty("onDisconnect"))
-		this.cb.onDisconnect = settings.onDisconnect;	
+		this.cb.onDisconnect = settings.onDisconnect;
+	if (settings.hasOwnProperty("onConnect"))
+		this.cb.onConnect = settings.onConnect;	
+	if (settings.hasOwnProperty("onStatusUpdate"))
+		this.cb.onStatusUpdate = settings.onStatusUpdate;		
 	
 	this.startupCmd = ["verify", "history"];
 	
@@ -36,8 +46,10 @@ function webclient(settings) {
 	this.msg.connectFail = ["Username is used by someone else", "Can;t load history"];
 	this.msg.connectEstablish = "Establishing connection";
 	this.msg.emptyName = "username cannot be empty";
+	this.msg.connectSuccess = "Online";
 	
 	this.startState = 0;
+	this.connected = 0;
 	
 }
 
@@ -51,25 +63,18 @@ webclient.prototype.connect = function() {
 		connection = new WebSocket("ws://" + window.location.host);
 	
 	//connection.onerror = self.error;
-	connection.onopen = function() { self.afterConnect(); };
-	//connection.onclose = self.afterConnect;
+	connection.onopen = function() { 
+		self.afterConnect();
+		if(self.cb.hasOwnProperty('onConnect'))
+			self.cb.onConnect();
+	};
 	connection.onmessage  = function(msg) { self.receivedMsg(msg.data); };
 	self.connection = connection;
-/*	
-	connection.onerror = function(error) {
-		self.status = "error";
-		console.log(error.message);
-	}
-	connection.onopen = function() {
-		self.status = "connected";
-		console.log("success");
-	}
-*/	
 }
 
 webclient.prototype.afterConnect = function() {
 	var self = this;
-	if (self.startState < 3) {
+	if (self.startState < 2) {
 		self.updateStatus(self.msg.connectStart[self.startState]);
 		var request = {
 			"type" : "cmd",
@@ -80,15 +85,18 @@ webclient.prototype.afterConnect = function() {
 		}
 		self.connection.send(JSON.stringify(request));
 	}
+	if (self.startState == 2) {
+		self.status = "online";
+		this.updateStatus(self.msg.connectSuccess);
+	}
 }
 
 webclient.prototype.updateStatus = function(status) {
 	this.status = status;
-	if (this.elem.indicator) {
-		
-	} else {
-		console.log(this.status);
-	}	
+	if(this.cb.hasOwnProperty('onStatusUpdate'))
+		this.cb.onStatusUpdate(status);
+	else 
+		console.log(this.status);	
 }
 
 webclient.prototype.setName = function(name) {
@@ -136,12 +144,6 @@ webclient.prototype.receivedMsg = function(msg) {
 	} 
 }
 
-webclient.prototype.disconnect = function() {
-	this.connection.close();
-	if(this.hasOwnProperty('onDisconnect'))
-		this.onDisconnect();
-}
-
 // OK
 webclient.prototype.dateToString = function(date) {
 	var dateObj = new Date(date);
@@ -162,12 +164,15 @@ webclient.prototype.onMessages = function(lines, append) {
 	lines.forEach(function(item, i, arr) {
 		  var user = item.user;
 		  var msg = item.data.data;
+		  var prefix = "";
+		  if (self.withDate) {
+			  prefix = "[" + self.dateToString(item.data.time) + "] ";
+		  }
 		  var message = "";
-		  if (user == "system") 
-			  message = "[" + self.dateToString(item.data.time) + "] " + msg;
-		  else 
-			  message = "[" + self.dateToString(item.data.time) + "] " + user + ":\t" + msg;
-		  
+		  if (user)
+			  message = prefix + user + ": " + msg;
+		  else
+			  message = prefix + ">> " + msg;
 		  if (elem) {
 			 elem.value += message + "\r\n";
 		  } else {
@@ -195,4 +200,33 @@ webclient.prototype.onUserList = function(users) {
 			  console.log("user-list", item);
 		  }
 	});	
+}
+
+webclient.prototype.sendMessage = function(msg) {
+	var self = this;
+	if (msg) {
+		var data = {
+				"type" : "msg",
+				"user" : self.name,
+				"data" : {
+					"data" : msg
+				}
+		}
+		self.connection.send(JSON.stringify(data));
+	}
+}
+
+webclient.prototype.disconnect = function() {
+	var self = this;
+	var request = {
+		"type" : "cmd",
+		"user" : self.name,
+		"data" : {
+			"cmd" : "disconnect"
+		}
+	}
+	self.connection.send(JSON.stringify(request));
+	self.connection.close();
+	if(this.cb.hasOwnProperty('onDisconnect'))
+		this.cb.onDisconnect();
 }

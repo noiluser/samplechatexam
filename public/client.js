@@ -49,13 +49,42 @@ document.getElementById('launch-connection').onclick = function() {
 // connection.onmessage = function(evt) { $("#msg").append("<p>"+evt.data+"</p>"); };
 // connection.close(); - close connection
 // connection.send('Hey server, whats up?'); - send message
+String.prototype.trim = function() {
+  return this.replace(/^\s+|\s+$/g, "");
+};
 
 var client = new webclient({
 	"host" : window.location.host,
 	"secured" : 1,
+	"withDate" : 1,
 	"historyEl" : "active-area",
-	"usersEl" : "users-area"
+	"usersEl" : "users-area",
+	"onConnect" : function() {
+		document.getElementById("initializer").style.display = "none";
+		document.getElementById("room").style.display = "block";
+	},
+	"onDisconnect" : function() {
+		document.getElementById("room").style.display = "none";
+		document.getElementById("initializer").style.display = "block";
+	},
+	"onStatusUpdate": function(message) {
+		document.getElementById('status').innerHTML = message;
+	}
 });
+
+var sendMessage = function(elem) {
+	var message = document.getElementById(elem).value;
+	client.sendMessage(message.trim());
+}
+
+document.getElementById('input-area').onkeypress = function(e) {
+	if (e.ctrlKey && (event.which == 13 || event.keyCode == 13 || event.which == 10 || event.keyCode == 10)) 
+		sendMessage('input-area');
+};
+
+document.getElementById('send-message').onclick = function() {
+	sendMessage('input-area');
+};
 
 document.getElementById('launch-connection').onclick = function() {
 	var name = document.getElementById('name').value;
@@ -65,4 +94,8 @@ document.getElementById('launch-connection').onclick = function() {
 	} else {
 		alert("name is empty");
 	}
+};
+
+window.onbeforeunload = function(e) {
+	client.disconnect();
 };
