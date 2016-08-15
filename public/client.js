@@ -56,12 +56,14 @@ String.prototype.trim = function() {
 var client = new webclient({
 	"host" : window.location.host,
 	"secured" : 1,
-	"withDate" : 1,
+	"withDate" : 0,
+	"keepAlive" : 1,
 	"historyEl" : "active-area",
 	"usersEl" : "users-area",
 	"onConnect" : function() {
 		document.getElementById("initializer").style.display = "none";
 		document.getElementById("room").style.display = "block";
+		document.getElementById('input-area').focus();
 	},
 	"onDisconnect" : function() {
 		document.getElementById("room").style.display = "none";
@@ -72,9 +74,10 @@ var client = new webclient({
 	},
 	"onMessageSent": function() {
 		document.getElementById('input-area').value = "";
+		document.getElementById('input-area').focus();
 	},
 	"onMessageReceived": function() {
-		var textarea = document.getElementById('input-area');
+		var textarea = document.getElementById('active-area');
 		textarea.scrollTop = textarea.scrollHeight;
 	}
 });
@@ -109,6 +112,7 @@ window.onbeforeunload = function(e) {
 
 document.getElementById('users-area').ondblclick = function() {
 	var address = this.value + ", ";
-	if (!document.getElementById('input-area').value)
+	if (!document.getElementById('input-area').value) 
 		document.getElementById('input-area').value = address;
+	document.getElementById('input-area').focus();
 };

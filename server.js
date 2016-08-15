@@ -113,6 +113,9 @@ wss.on('connection', function connection(ws) {
 						}
 				}
 				self.broadcast(JSON.stringify(broadulist));	
+			} else if (content.cmd == "ping") {
+				data.data.cmd = "pong"; 
+				ws.send(JSON.stringify(data));
 			}
 		} else if (data.type == "msg") {
 			var time = new Date();

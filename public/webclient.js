@@ -9,10 +9,16 @@ function webclient(settings) {
 	this.elem = {};
 	this.cb = {};
 	
+	if (settings.hasOwnProperty("keepAlive"))
+		this.keepAlive = settings.keepAlive;
+	else 
+		this.keepAlive = 0;
+	
 	if (settings.hasOwnProperty("secured"))
 		this.secured = settings.secured;
 	else 
 		this.secured = 0;
+	
 	if (settings.hasOwnProperty("withDate"))
 		this.withDate = settings.withDate;
 	else 
@@ -20,8 +26,13 @@ function webclient(settings) {
 
 	if (settings.hasOwnProperty("host"))
 		this.host = settings.host;
+	else 
+		this.host = "";
+	
 	if (settings.hasOwnProperty("name"))
 		this.name = settings.name;
+	else 
+		this.name = "";
 	
 	if (settings.hasOwnProperty("historyEl"))
 		this.elem.history = settings.historyEl;
@@ -29,31 +40,34 @@ function webclient(settings) {
 		this.elem.users = settings.usersEl;
 	if (settings.hasOwnProperty("statusEl"))
 		this.elem.indicator = settings.statusEl;
-	/*if (settings.hasOwnProperty("inputEl"))
-		this.elem.indicator = settings.statusEl;*/
+
 	
 	if (settings.hasOwnProperty("onDisconnect"))
 		this.cb.onDisconnect = settings.onDisconnect;
+	
 	if (settings.hasOwnProperty("onConnect"))
 		this.cb.onConnect = settings.onConnect;	
+	
 	if (settings.hasOwnProperty("onStatusUpdate"))
-		this.cb.onStatusUpdate = settings.onStatusUpdate;	
+		this.cb.onStatusUpdate = settings.onStatusUpdate;
+	
 	if (settings.hasOwnProperty("onMessageSent"))
 		this.cb.onMessageSent = settings.onMessageSent;	
+	
 	if (settings.hasOwnProperty("onMessageReceived"))
 		this.cb.onMessageReceived = settings.onMessageReceived;	
 	
-	this.startupCmd = ["verify", "history"];
+	this.startupCmd = ["verify", "history", "ping"];
 	
-	this.msg.connectStart = ["Verifying username", "Fetching history"];
-	this.msg.connectEnd = ["Username verified", "History loaded"];
-	this.msg.connectFail = ["Username is used by someone else", "Can;t load history"];
+	this.msg.connectStart = ["Verifying username", "Fetching history", "Online"];
+	this.msg.connectEnd = ["Username verified", "History loaded", "Online"];
+	this.msg.connectFail = ["Username is used by someone else", "Can't load history"];
 	this.msg.connectEstablish = "Establishing connection";
 	this.msg.emptyName = "username cannot be empty";
-	this.msg.connectSuccess = "Online";
 	
 	this.startState = 0;
 	this.connected = 0;
+	
 	
 }
 
@@ -61,24 +75,29 @@ webclient.prototype.connect = function() {
 	var self = this;
 	self.status = "fetching";
 	self.updateStatus(self.msg.connectEstablish);
+	
 	if (self.secured)
 		connection = new WebSocket("wss://" + window.location.host);
 	else 
 		connection = new WebSocket("ws://" + window.location.host);
-	
-	//connection.onerror = self.error;
+	self.connection = connection;
+	connection.onerror = function(err) {
+		// TODO
+		console.log(err);
+	};
 	connection.onopen = function() { 
 		self.afterConnect();
 		if(self.cb.hasOwnProperty('onConnect'))
 			self.cb.onConnect();
+		
 	};
 	connection.onmessage  = function(msg) { self.receivedMsg(msg.data); };
-	self.connection = connection;
+	
 }
 
 webclient.prototype.afterConnect = function() {
 	var self = this;
-	if (self.startState < 2) {
+	if (self.startState < 3) {
 		self.updateStatus(self.msg.connectStart[self.startState]);
 		var request = {
 			"type" : "cmd",
@@ -91,7 +110,6 @@ webclient.prototype.afterConnect = function() {
 	}
 	if (self.startState == 2) {
 		self.status = "online";
-		this.updateStatus(self.msg.connectSuccess);
 	}
 }
 
@@ -142,6 +160,28 @@ webclient.prototype.receivedMsg = function(msg) {
 			}
 		} else if (data.data.cmd == "userlist") {
 			self.onUserList(data.data.data);
+		} else if (data.data.cmd == "pong") {
+			// TODO
+			
+			if (self.keepAlive) {
+				if (self.pongId)
+					clearTimeout(self.pongId);
+				var ping = setTimeout(function() { 
+						var pingRequest = {
+								"type" : "cmd",
+								"user" : self.name,
+								"data" : {
+									"cmd" : "ping"
+								}
+						}
+						self.connection.send(JSON.stringify(pingRequest));
+						var pong = setTimeout(function() { 
+							console.log("error while pinging");
+						}, 10000);				
+						self.pongId = pong;
+					}, 2000);
+				self.pingId = ping;				
+			}
 		}
 	} else if (data.type == "msg" && (self.startState >= 2)) {
 		self.onMessages([data], 1);
