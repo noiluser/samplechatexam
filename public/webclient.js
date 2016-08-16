@@ -9,11 +9,6 @@ function webclient(settings) {
 	this.elem = {};
 	this.cb = {};
 	
-	if (settings.hasOwnProperty("keepAlive"))
-		this.keepAlive = settings.keepAlive;
-	else 
-		this.keepAlive = 0;
-	
 	if (settings.hasOwnProperty("secured"))
 		this.secured = settings.secured;
 	else 
@@ -232,24 +227,22 @@ webclient.prototype.disconnect = function(saveName) {
 
 webclient.prototype.ping = function() {
 	var self = this;
-	if (self.keepAlive) {
-		if (self.pongId)
-			clearTimeout(self.pongId);
-		var ping = setTimeout(function() { 
-				var pingRequest = {
-						"type" : "cmd",
-						"user" : self.name,
-						"data" : {
-							"cmd" : "ping"
-						}
-				}
-				self.connection.send(JSON.stringify(pingRequest));
-				var pong = setTimeout(function() { 
-					alert(self.msg.serverUnavailable)
-					self.disconnect();
-				}, 10000);				
-				self.pongId = pong;
-			}, 2000);
-		self.pingId = ping;	
-	}
+	if (self.pongId)
+		clearTimeout(self.pongId);
+	var ping = setTimeout(function() { 
+			var pingRequest = {
+					"type" : "cmd",
+					"user" : self.name,
+					"data" : {
+						"cmd" : "ping"
+					}
+			}
+			self.connection.send(JSON.stringify(pingRequest));
+			var pong = setTimeout(function() { 
+				alert(self.msg.serverUnavailable)
+				self.disconnect();
+			}, 10000);				
+			self.pongId = pong;
+		}, 2000);
+	self.pingId = ping;	
 }

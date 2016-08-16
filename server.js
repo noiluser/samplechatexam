@@ -26,7 +26,7 @@ wss.broadcast = function broadcast(message) {
 	});
 };
 
-var users = [];
+var usersActivity = {};
 var history = [];
 var historyLimit = 9999;
 
@@ -43,15 +43,16 @@ wss.on('connection', function connection(ws) {
 			if (content.cmd == "verify") {
 				if (username) {
 					console.log(username + " is trying to log in");
-					if (users.indexOf(username) > -1) {
+					if (username in usersActivity) {
 						// user already connected
 						data.data.data = 0; 
 					} else {
+						var time = new Date();
 						// connect approved
-						users.push(username);
+						usersActivity[username] = time.getTime();
 						data.data.data = 1;
 						// add line in history
-						var time = new Date();
+						
 						var broadmsg = {
 								"type" : "msg",
 								"user" : "",
@@ -61,9 +62,15 @@ wss.on('connection', function connection(ws) {
 								}
 						}
 						history.push(broadmsg);
+						if (history.length > historyLimit) 
+							history.shift();
 						// broadcast user connected
 						self.broadcast(JSON.stringify(broadmsg));
-						// broadcast new userlist					
+						// broadcast new userlist	
+						var users = [];
+						for (var key in usersActivity) {
+							users.push(key);
+						}
 						var broadulist = {
 								"user" : "",
 								"type" : "cmd",
@@ -85,12 +92,7 @@ wss.on('connection', function connection(ws) {
 			} else if (content.cmd == "disconnect") {
 				console.log(username + " goes offline");
 				// disconnect approved
-				var index = users.indexOf(username);
-				if (index > -1) {
-					users.splice(index, 1);
-				} else {
-					console.log("user not found");
-				}
+				delete usersActivity[username];
 				// add line in history
 				var time = new Date();
 				var broadmsg = {
@@ -98,13 +100,19 @@ wss.on('connection', function connection(ws) {
 						"user" : "",
 						"data" : {
 							"time" : time.getTime(),
-							"data" : username + " disconnected"
+							"data" : username + " disconnected (leaves)"
 						}
 				}
 				history.push(broadmsg);
+				if (history.length > historyLimit) 
+					history.shift();
 				// broadcast user disconnected
 				self.broadcast(JSON.stringify(broadmsg));
-				// broadcast new userlist					
+				// broadcast new userlist	
+				var users = [];
+				for (var key in usersActivity) {
+					users.push(key);
+				}
 				var broadulist = {
 						"user" : "",
 						"type" : "cmd",
@@ -116,6 +124,9 @@ wss.on('connection', function connection(ws) {
 				self.broadcast(JSON.stringify(broadulist));	
 			} else if (content.cmd == "ping") {
 				// keep connection alive
+				var username = data.user;
+				var time = new Date();
+				usersActivity[username] = time.getTime();
 				data.data.data = "pong";
 				ws.send(JSON.stringify(data));
 			}
@@ -124,10 +135,55 @@ wss.on('connection', function connection(ws) {
 			data.data.time = time.getTime();
 			// save message and broadcast it for everybody
 			history.push(data);
+			if (history.length > historyLimit) 
+				history.shift();
 			self.broadcast(JSON.stringify(data));
 		} 		
 	});
 });
+
+setInterval(function checkUsers() {
+	var time = new Date();
+	for (var key in usersActivity) {
+	    var uTime = new Date(usersActivity[key]);
+	    uTime = uTime.getTime();
+	    if ((time - uTime) > 10000) {
+	    	// client disconnected. update userlist
+	    	var username = key;
+	    	delete usersActivity[username];
+			console.log(username + " terminated by the server");
+			// add line in history
+			var time = new Date();
+			var broadmsg = {
+					"type" : "msg",
+					"user" : "",
+					"data" : {
+						"time" : time.getTime(),
+						"data" : username + " disconnected (connection timed out)"
+					}
+			}
+			history.push(broadmsg);
+			if (history.length > historyLimit) 
+				history.shift();
+			// broadcast user disconnected
+			wss.broadcast(JSON.stringify(broadmsg));
+			// broadcast new userlist
+			var users = [];
+			for (var key in usersActivity) {
+				users.push(key);
+			}
+			var broadulist = {
+					"user" : "",
+					"type" : "cmd",
+					"data" : {
+						"cmd" : "userlist",
+						"data" : users
+					}
+			}
+			wss.broadcast(JSON.stringify(broadulist));	
+	    }
+	}
+}, 2000)
 
 server.on('request', app);
 server.listen(port, function () { 
