@@ -4,7 +4,7 @@ String.prototype.trim = function() {
 
 var client = new webclient({
 	"host" : window.location.host,
-	"secured" : 0,
+	"secured" : 1,
 	"withDate" : 0,
 	"onConnect" : function() {		
 		document.getElementById("initializer").style.display = "none";
