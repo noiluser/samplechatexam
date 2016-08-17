@@ -126,8 +126,7 @@ wss.on('connection', function connection(ws) {
 				// keep connection alive
 				var username = data.user;
 				var time = new Date();
-				usersActivity[username] = time.getTime();
-console.log("ping received from " + username, usersActivity[username]);				
+				usersActivity[username] = time.getTime();				
 				data.data.data = "pong";
 				ws.send(JSON.stringify(data));
 			}
@@ -145,12 +144,11 @@ console.log("ping received from " + username, usersActivity[username]);
 
 setInterval(function checkUsers() {
 	var time = new Date();
+	time = time.getTime();
 	for (var key in usersActivity) {
 	    var uTime = new Date(usersActivity[key]);
-	    uTime = uTime.getTime();
-console.log("check user activity", time, uTime, time - uTime);	    
-	    if ((time - uTime) > 10000) {
-console.log(key, "disconnecting");	    	
+	    uTime = uTime.getTime();   
+	    if ((time - uTime) > 10000) {	    	
 	    	// client disconnected. update userlist
 	    	var username = key;
 	    	delete usersActivity[username];
