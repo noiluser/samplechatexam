@@ -17,5 +17,5 @@ Project developed on:
 
 May be simply launched via starting server.js
 ```
-node server.js
+npm start
 ```
