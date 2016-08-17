@@ -27,14 +27,14 @@ textarea#active-area {
 	margin-left: 10px;
 	outline: none;
 	vertical-align: top;
-	width : 100px;	
+	width : 200px;	
 }
 
 #send-message {
 	height: 30px;
 	margin-left: 10px;
 	vertical-align: top;
-	width : 100px;	
+	width : 200px;	
 }
 
 option.owner {
