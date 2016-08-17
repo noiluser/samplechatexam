@@ -14,3 +14,8 @@ Project developed on:
 > nodejs v.4.4.7
 
 > npm v.3.10.6
+
+May be simply launched via starting server.js
+```
+node server.js
+```
