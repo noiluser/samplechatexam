@@ -1,8 +1,10 @@
 # samplechatexam
 ## websocket based chat with backend on nodejs
 
-Deployed on Heroku:
+Deployed on Heroku*:
 [https://nsrg-websocket-chat.herokuapp.com/](https://nsrg-websocket-chat.herokuapp.com/)
+
+* Please note that Heroku launches proccesses with short lifetime so it may terminate socket connection in the application without any reason after some minutes.
 
 Nodejs server was developed with requirements of:
 > Express.js v.4.14.0 framework
