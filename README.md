@@ -1,5 +1,5 @@
 # samplechatexam
-## nodejs based chat with websocket usage
+## websocket based chat with backend on nodejs
 
 Deployed on Heroku:
 [https://nsrg-websocket-chat.herokuapp.com/](https://nsrg-websocket-chat.herokuapp.com/)
